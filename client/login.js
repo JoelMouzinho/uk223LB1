@@ -21,17 +21,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = await response.json();
   
         if (response.ok) {
-          // Erfolg: Token speichern und weiterleiten
-          localStorage.setItem("token", data.token); // JWT speichern
-          alert("Login successful!");
-          window.location.href = "/"; // Weiterleitung zur Dashboard-Seite
+          localStorage.setItem("token", data.token);
+          window.location.href = "/";
         } else {
-          // Fehler: Fehlermeldung anzeigen
-          alert(`Error: ${data.error}`);
+          console.error(error);
         }
       } catch (error) {
         console.error("Error:", error);
-        alert("An error occurred. Please try again.");
       }
     });
   });

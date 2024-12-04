@@ -1,6 +1,10 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Database } from "../database";
+import dotenv from 'dotenv';
+
+// Lade .env-Variablen
+dotenv.config();
 
 export class AuthService {
     private database: Database;
@@ -68,7 +72,7 @@ export class AuthService {
 
         const token = jwt.sign(
             { userID: user.userID, role: user.role },
-            process.env.JWT_SECRET || "your_jwt_secret",
+            process.env.JWT_SECRET,
             { expiresIn: "1h" }
         );
 

@@ -1,85 +1,91 @@
-import express, { Express, Request, Response } from 'express'
-import { API } from './api'
-import http from 'http'
-import { resolve, dirname } from 'path'
-import { Database } from './database'
-import authRoutes from "./routes/authRoutes";
+import express, { Express, Request, Response } from 'express';
+import http from 'http';
+import { resolve } from 'path';
+import { Database } from './database';
+import AuthController from './routes/authRoutes';
+import PostController from './routes/postRoutes';
 import cors from 'cors';
+import dotenv from 'dotenv';
+
+// Lade .env-Variablen
+dotenv.config();
 
 class Backend {
   // Properties
-  private _app: Express
-  private _api: API
-  private _database: Database
-  private _env: string
+  private _app: Express;
+  private _database: Database;
+  private _env: any;
 
   // Getters
   public get app(): Express {
-    return this._app
-  }
-
-  public get api(): API {
-    return this._api
+    return this._app;
   }
 
   public get database(): Database {
-    return this._database
+    return this._database;
   }
 
   // Constructor
   constructor() {
-    this._app = express()
-    this._database = new Database()
-    this._api = new API(this._app)
-    this._env = process.env.NODE_ENV || 'development'
+    this._app = express();
+    this._database = new Database();
+    this._env = process.env.NODE_ENV;
 
     this.setupMiddlewares();
-    this.setupStaticFiles()
-    this.setupRoutes()
-    this.startServer()
+    this.setupStaticFiles();
+    this.setupRoutes();
+    this.startServer();
   }
 
+  // Middlewares
   private setupMiddlewares(): void {
     this._app.use(cors());
-    this._app.use(express.json()); // Parse JSON request bodies
-    this._app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
+    this._app.use(express.json());
+    this._app.use(express.urlencoded({ extended: true }));
   }
 
-  // Methods
+  // Serve static files
   private setupStaticFiles(): void {
-    this._app.use(express.static('client'))
+    const clientPath = resolve('client');
+    this._app.use(express.static(clientPath));
   }
 
+  // Define routes
   private setupRoutes(): void {
+    const clientPath = resolve('client');
+
     // Serve signup.html
     this._app.get('/signup', (req: Request, res: Response) => {
-        const __dirname = resolve(dirname(''));
-        res.sendFile(__dirname + '/client/signup.html');
+      res.sendFile(`${clientPath}/signup.html`);
     });
 
-    this._app.get('/login', (req: Request, res: Response) => {
-      const __dirname = resolve(dirname(''));
-      res.sendFile(__dirname + '/client/login.html');
-  });
-
     // Serve login.html
+    this._app.get('/login', (req: Request, res: Response) => {
+      res.sendFile(`${clientPath}/login.html`);
+    });
+
+    // Serve index.html
     this._app.get('/', (req: Request, res: Response) => {
-        const __dirname = resolve(dirname(''));
-        res.sendFile(__dirname + '/client/index.html');
+      res.sendFile(`${clientPath}/index.html`);
     });
 
     // Authentication routes
-    this._app.use('/auth', authRoutes);
-}
+    const authController = new AuthController(this.database);
+    this._app.use('/auth', authController.router);
+    // Posts routes
+    const postController = new PostController(this.database);
+    this._app.use('/', postController.router);
+  }
 
+  // Start server
   private startServer(): void {
-    if (this._env === 'production') {
-      http.createServer(this.app).listen(3000, () => {
-        console.log('Server is listening!')
-      })
-    }
+    const port = process.env.PORT;
+
+    http.createServer(this._app).listen(port, () => {
+      console.log(`Server is listening on http://localhost:${port}`);
+    });
   }
 }
 
-const backend = new Backend()
-export const viteNodeApp = backend.app
+const backend = new Backend();
+export const viteNodeApp = backend.app;
