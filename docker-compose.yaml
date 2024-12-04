@@ -1,8 +1,8 @@
 version: "3.8"
- 
+
 services:
     mariadb:
-        image: mariadb:10.6.4-focal
+        image: mariadb:11.5.2
         command: "--default-authentication-plugin=mysql_native_password"
         volumes:
             - m223_project_mariadb:/var/lib/mysql
@@ -13,10 +13,8 @@ services:
             - MYSQL_USER=minitwitter
             - MYSQL_PASSWORD=supersecret123
         ports:
-            - "4200:4200"
-        networks:
-            - app-network
- 
+            - 3306:3306
+
     nodejs:
         image: node:22
         command: bash -c "npm install && npm run build && npm run start"
@@ -31,12 +29,10 @@ services:
             - JWT_SECRET=6yVPJ0Z9MgRm8eXH7qRCOLWdN4tvOYB3+k1FiqW0dN6CKsYXu1oZQxKrREsJABWZ0AYph2rQH
             - PORT=8080
         ports:
-            - "8080:8080"
+            - 8080:8080
         working_dir: /usr/src/app
         volumes:
             - ./:/usr/src/app
-        networks:
-            - app-network
 
     phpmyadmin:
         image: phpmyadmin/phpmyadmin
@@ -48,13 +44,7 @@ services:
             - PMA_PORT=3306
             - MYSQL_ROOT_PASSWORD=supersecret123
         ports:
-            - "9300:80"
-        networks:
-            - app-network
- 
+            - 9200:80
+
 volumes:
     m223_project_mariadb:
- 
-networks:
-    app-network:
-        driver: bridge
