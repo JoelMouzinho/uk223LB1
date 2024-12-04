@@ -68,7 +68,7 @@ class Backend {
         res.sendFile(__dirname + '/client/index.html');
     });
 
-    // Add authentication routes
+    // Authentication routes
     this._app.use('/auth', authRoutes);
 }
 

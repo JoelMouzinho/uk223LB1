@@ -74,4 +74,47 @@ export class AuthService {
 
         return token;
     }
+
+    public async getUserProfile(userID: number): Promise<any> {
+        const query = `SELECT userID, name, email FROM User WHERE userID = ?`;
+    
+        const rows = await this.database.executeSQL(query, [userID]);
+        if (!rows || rows.length === 0) {
+            throw new Error("User not found.");
+        }
+    
+        return rows[0]; // Gibt Benutzerinformationen zurück (ohne Passwort).
+    }
+    
+    public async updateUserProfile(userID: number, data: { name?: string; email?: string; password?: string }): Promise<string> {
+        const { name, email, password } = data;
+    
+        const updates: string[] = [];
+        const values: any[] = [];
+    
+        if (name) {
+            updates.push("name = ?");
+            values.push(name);
+        }
+        if (email) {
+            updates.push("email = ?");
+            values.push(email);
+        }
+        if (password) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            updates.push("password = ?");
+            values.push(hashedPassword);
+        }
+    
+        if (updates.length === 0) {
+            throw new Error("No fields to update.");
+        }
+    
+        values.push(userID);
+    
+        const query = `UPDATE User SET ${updates.join(", ")} WHERE userID = ?`;
+    
+        await this.database.executeSQL(query, values);
+        return "Profile updated successfully!";
+    }
 }

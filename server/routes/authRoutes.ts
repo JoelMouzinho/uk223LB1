@@ -1,6 +1,7 @@
 import express from "express";
 import { AuthService } from "../services/authService";
 import { Database } from "../database";
+import { verifyToken } from "../middleware/authMiddleware.ts";
 
 const router = express.Router();
 const database = new Database();
@@ -24,6 +25,32 @@ router.post("/login", async (req, res) => {
         res.status(200).json({ token });
     } catch (error: any) {
         res.status(401).json({ error: error.message });
+    }
+});
+
+// Benutzerprofil abrufen
+router.get("/profile", verifyToken, async (req: any, res) => {
+    try {
+        const userID = req.userID;
+        const profile = await authService.getUserProfile(userID);
+        res.status(200).json(profile);
+
+        delete profile.password;
+
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Benutzerprofil aktualisieren
+router.put("/profile", verifyToken, async (req: any, res) => {
+    try {
+        const userID = req.userID;
+        const { name, email, password } = req.body;
+        const result = await authService.updateUserProfile(userID, { name, email, password });
+        res.status(200).json({ message: result });
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
     }
 });
 
